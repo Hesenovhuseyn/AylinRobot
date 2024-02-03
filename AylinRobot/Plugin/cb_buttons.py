@@ -63,12 +63,6 @@ async def cb_data(client, message):
             reply_markup=Button.OYUN_BUTTONS,
             disable_web_page_preview=True
         )        
-    elif message.data == "sahib":
-        await message.message.edit_text(
-            text=Translation.SAHIB_TEXT,
-            reply_markup=Button.SAHIB_BUTTONS,
-            disable_web_page_preview=True
-        ) 
     elif message.data == "elave":
         await message.message.edit_text(
             text=Translation.ELAVELER_TEXT,
