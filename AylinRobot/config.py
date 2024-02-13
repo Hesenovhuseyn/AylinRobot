@@ -19,7 +19,7 @@ class Config:
    OWNER_ID = int(os.environ.get("OWNER_ID","5729993939"))
    OWNER_NAME = os.environ.get("OWNER_NAME", "Miri_o47") 
    BROADCAST_AS_COPY = bool(os.environ.get("BROADCAST_AS_COPY", "False"))
-   MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb+srv://music:music@cluster0.sh6h4.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+   MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb+srv://huseyn:huseyn@cluster0.zvhh345.mongodb.net/?retryWrites=true&w=majority")
    LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1001993620330"))
    PLAYLIST_NAME = os.environ.get("PLAYLIST_NAME", "FatimeRobotPlaylist")
    PLAYLIST_ID = int(os.environ.get("PLAYLIST_ID", "-1001962032043"))
