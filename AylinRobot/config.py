@@ -16,7 +16,7 @@ class Config:
    BOT_TOKEN = os.getenv("BOT_TOKEN", "6729010879:AAFIXr_QHw05BdXWE_ioCZW9f-TbjkCvoTE")
    BOT_USERNAME = os.environ.get("BOT_USERNAME", "Fatimem_bot")
    BOT_NAME = os.environ.get("BOT_NAME", "Fatime")   
-   OWNER_ID = int(os.environ.get("OWNER_ID","5729993939"))
+   OWNER_ID = int(os.environ.get("OWNER_ID","6514015209"))
    OWNER_NAME = os.environ.get("OWNER_NAME", "Miri_o47") 
    BROADCAST_AS_COPY = bool(os.environ.get("BROADCAST_AS_COPY", "False"))
    MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb+srv://huseyn:huseyn@cluster0.zvhh345.mongodb.net/?retryWrites=true&w=majority")
