@@ -1,23 +1,25 @@
-# @AylinRobot
-# Sahib @HuseynH
-# Repo Açığdısa İcazəsis Götürmə Oğlum
-from AylinRobot.translation import LAN
-import shutil, psutil, traceback, os, datetime, random, string, time, traceback, aiofiles, asyncio
 from AylinRobot.translation import *
 from AylinRobot.config import Config
 from AylinRobot import AylinRobot as app
-from pyrogram import Client as USER
+import datetime
 import motor.motor_asyncio
 from motor.motor_asyncio import AsyncIOMotorClient as MongoClient
-from pyrogram.types import Message
+import asyncio
+import datetime
+import shutil, psutil, traceback, os
+import random
+import string
+import time
+import traceback
+import aiofiles
 from pyrogram import Client, filters, __version__
+from pyrogram.types import Message
 from pyrogram.errors import (
     FloodWait,
     InputUserDeactivated,
     PeerIdInvalid,
     UserIsBlocked,
 )
-
 
 
 ################### VERİTABANI VERİ GİRİŞ ÇIKIŞI #########################
@@ -89,7 +91,7 @@ class Database:
         return self.col.find({"ban_status.is_banned": True})
 
 
-db = Database(Config.MONGODB_URI, Config.MONGODB_URI)
+db = Database(Config.MONGODB_URI, Config.BOT_USERNAME)
 mongo_db_veritabani = MongoClient(Config.MONGODB_URI)
 dcmdb = mongo_db_veritabani.handlers
 
@@ -244,7 +246,7 @@ async def botstats(bot: Client, message: Message):
     ram_usage = psutil.virtual_memory().percent
     disk_usage = psutil.disk_usage("/").percent
     total_users = await db.total_users_count()
-    await g4rip.edit(text=LAN.STATS.format(Config.BOT_USERNAME, total_users, groups, pms, total, used, disk_usage, free, cpu_usage, ram_usage, __version__))
+    await g4rip.edit(text=LAN.STATS.format(Config.BOT_USERNAME, total_users, groups, pms, total, used, disk_usage, free, cpu_usage, ram_usage, __version__), parse_mode="md")
 
 
 
@@ -367,4 +369,5 @@ def humanbytes(size):
         size /= power
         raised_to_pow += 1
     return str(round(size, 2)) + " " + dict_power_n[raised_to_pow] + "B"
+
 
