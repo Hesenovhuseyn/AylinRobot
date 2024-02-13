@@ -29,7 +29,7 @@ AylinIMG = f"{Config.START_IMG}"
 async def start(client, message):
     await message.reply_photo(
         AylinIMG,
-        caption=Translation.START_TEXT.format(message.from_user.mention, Config.BOT_USERNAME, Config.OWNER_NAME, Config.BOT_NAME),
+        caption=Translation.START_TEXT.format(message.from_user.mention,Config.BOT_NAME, Config.BOT_USERNAME, Config.OWNER_NAME),
         reply_markup=Button.START_BUTTONS
     )
     
