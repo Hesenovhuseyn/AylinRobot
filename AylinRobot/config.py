@@ -13,7 +13,7 @@ class Config:
 
    API_ID = int(os.getenv("API_ID", "8953338"))
    API_HASH = os.getenv("API_HASH", "fe21f223cb02d8f7c1cbda651f553a45")
-   BOT_TOKEN = os.getenv("BOT_TOKEN", "6729010879:AAFIXr_QHw05BdXWE_ioCZW9f-TbjkCvoTE")
+   BOT_TOKEN = os.getenv("BOT_TOKEN", "7146344348:AAHR2PHd0WbeiHkT4t-UAg7MjWJ1weN4WB8")
    BOT_USERNAME = os.environ.get("BOT_USERNAME", "Fatimem_bot")
    BOT_NAME = os.environ.get("BOT_NAME", "Fatime")   
    OWNER_ID = int(os.environ.get("OWNER_ID","5729993939"))
