@@ -17,7 +17,7 @@ class Config:
    BOT_USERNAME = os.environ.get("BOT_USERNAME", "Fatimem_bot")
    BOT_NAME = os.environ.get("BOT_NAME", "Fatime")   
    OWNER_ID = int(os.environ.get("OWNER_ID","7114179583"))
-   OWNER_NAME = os.environ.get("OWNER_NAME", "Miri_o47") 
+   OWNER_NAME = os.environ.get("OWNER_NAME", "dod_miridi_agili_ol") 
    BROADCAST_AS_COPY = bool(os.environ.get("BROADCAST_AS_COPY", "False"))
    MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb+srv://huseyn:huseyn@cluster0.zvhh345.mongodb.net/?retryWrites=true&w=majority")
    LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002041351237"))
