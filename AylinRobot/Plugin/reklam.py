@@ -100,7 +100,7 @@ class Database:
         return self.col.find({"ban_status.is_banned": True})
 
 
-db = Database(Config.MONGODB_URI, Config.Config.BOT_USERNAME)
+db = Database(Config.MONGODB_URI, Config.BOT_USERNAME)
 mongo_db_veritabani = MongoClient(Config.MONGODB_URI)
 dcmdb = mongo_db_veritabani.handlers
 
