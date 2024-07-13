@@ -7,7 +7,7 @@ from AylinRobot import AylinRobot as app
 
 
 
-
+from pyrogram.enums import *
 import datetime
 import motor.motor_asyncio
 from motor.motor_asyncio import AsyncIOMotorClient as MongoClient
@@ -110,7 +110,7 @@ dcmdb = mongo_db_veritabani.handlers
 async def handle_user_status(bot: Client, cmd: Message): # Kullanıcı kontrolü
     chat_id = cmd.chat.id
     if not await db.is_user_exist(chat_id):
-        if cmd.chat.type == "private":
+        if cmd.chat.type == ChatType.PRIVATE:
             await db.add_user(chat_id)
             await bot.send_message(Config.LOG_CHANNEL,LAN.BILDIRIM.format(cmd.from_user.first_name, cmd.from_user.id, cmd.from_user.first_name, cmd.from_user.id))
         else:
@@ -131,7 +131,7 @@ async def handle_user_status(bot: Client, cmd: Message): # Kullanıcı kontrolü
                 msj = f"@{Config.SUPPORT}"
             else:
                 msj = f"[{LAN.SAHIBIME}](tg://user?id={Config.OWNER_ID})"
-            if cmd.chat.type == "private":
+            if cmd.chat.type == ChatType.PRIVATE:
                 await cmd.reply_text(LAN.PRIVATE_BAN.format(msj), quote=True)
             else:
                 await cmd.reply_text(LAN.GROUP_BAN.format(msj),quote=True)
