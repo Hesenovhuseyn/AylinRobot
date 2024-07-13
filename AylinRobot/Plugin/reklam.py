@@ -1,6 +1,13 @@
-from AylinRobot.translation import *
+
 from AylinRobot.config import Config
 from AylinRobot import AylinRobot as app
+
+
+
+
+
+
+
 import datetime
 import motor.motor_asyncio
 from motor.motor_asyncio import AsyncIOMotorClient as MongoClient
@@ -20,6 +27,8 @@ from pyrogram.errors import (
     PeerIdInvalid,
     UserIsBlocked,
 )
+
+LANGAUGE = os.environ.get("LANGAUGE", "TR")
 
 
 ################### VERİTABANI VERİ GİRİŞ ÇIKIŞI #########################
@@ -91,19 +100,19 @@ class Database:
         return self.col.find({"ban_status.is_banned": True})
 
 
-db = Database(Config.MONGODB_URI, Config.BOT_USERNAME)
+db = Database(Config.MONGODB_URI, Config.Config.BOT_USERNAME)
 mongo_db_veritabani = MongoClient(Config.MONGODB_URI)
 dcmdb = mongo_db_veritabani.handlers
 
 
 
 ################## KULLANICI KONTROLLERİ #############
-async def handle_user_status(bot: Client, message: Message): # Kullanıcı kontrolü
-    chat_id = message.chat.id
+async def handle_user_status(bot: Client, cmd: Message): # Kullanıcı kontrolü
+    chat_id = cmd.chat.id
     if not await db.is_user_exist(chat_id):
-        if message.chat.type == "private":
+        if cmd.chat.type == "private":
             await db.add_user(chat_id)
-            await bot.send_message(Config.LOG_CHANNEL,LAN.BILDIRIM.format(message.from_user.first_name, message.from_user.id, message.from_user.first_name, message.from_user.id))
+            await bot.send_message(Config.LOG_CHANNEL,LAN.BILDIRIM.format(cmd.from_user.first_name, cmd.from_user.id, cmd.from_user.first_name, cmd.from_user.id))
         else:
             await db.add_user(chat_id)
             chat = bot.get_chat(chat_id)
@@ -111,7 +120,7 @@ async def handle_user_status(bot: Client, message: Message): # Kullanıcı kontr
                 new_chat_id = str(chat_id)[4:]
             else:
                 new_chat_id = str(chat_id)[1:]
-            await bot.send_message(Config.LOG_CHANNEL,LAN.GRUP_BILDIRIM.format(message.from_user.first_name, message.from_user.id, message.from_user.first_name, message.from_user.id, message.chat.id, message.chat.id))
+            await bot.send_message(Config.LOG_CHANNEL,LAN.GRUP_BILDIRIM.format(cmd.from_user.first_name, cmd.from_user.id, cmd.from_user.first_name, cmd.from_user.id, chat.title, cmd.chat.id, cmd.chat.id, cmd.message_id))
 
     ban_status = await db.get_ban_status(chat_id) # Yasaklı Kullanıcı Kontrolü
     if ban_status["is_banned"]:
@@ -122,13 +131,13 @@ async def handle_user_status(bot: Client, message: Message): # Kullanıcı kontr
                 msj = f"@{Config.SUPPORT}"
             else:
                 msj = f"[{LAN.SAHIBIME}](tg://user?id={Config.OWNER_ID})"
-            if message.chat.type == "private":
-                await message.reply_text(LAN.PRIVATE_BAN.format(msj), quote=True)
+            if cmd.chat.type == "private":
+                await cmd.reply_text(LAN.PRIVATE_BAN.format(msj), quote=True)
             else:
-                await message.reply_text(LAN.GROUP_BAN.format(msj),quote=True)
-                await bot.leave_chat(message.chat.id)
+                await cmd.reply_text(LAN.GROUP_BAN.format(msj),quote=True)
+                await bot.leave_chat(cmd.chat.id)
             return
-    await message.continue_propagation()
+    await cmd.continue_propagation()
 
 
 
@@ -246,87 +255,19 @@ async def botstats(bot: Client, message: Message):
     ram_usage = psutil.virtual_memory().percent
     disk_usage = psutil.disk_usage("/").percent
     total_users = await db.total_users_count()
-    await g4rip.edit(text=LAN.STATS.format(Config.BOT_USERNAME, total_users, groups, pms, total, used, disk_usage, free, cpu_usage, ram_usage, __version__))
+    await g4rip.edit(text=LAN.STATS.format(Config.BOT_USERNAME, total_users, groups, pms, total, used, disk_usage, free, cpu_usage, ram_usage, __version__), parse_mode="md")
 
 
 
 # Botu ilk başlatan kullanıcıların kontrolünü sağlar.
 @app.on_message()
-async def G4RIP(bot: Client, message: Message):
-    await handle_user_status(bot, message)
+async def G4RIP(bot: Client, cmd: Message):
+    await handle_user_status(bot, cmd)
 
-async def broadcast_messages(user_id, message):
-    try:
-        await message.copy(chat_id=user_id)
-        return True, "Success"
-    except FloodWait as e:
-        await asyncio.sleep(e.x)
-        return await broadcast_messages(user_id, message)
-    except InputUserDeactivated:
-        await db.delete_user(int(user_id))
-        logging.info(f"{user_id}-Removed from Database, since deleted account.")
-        return False, "Deleted"
-    except UserIsBlocked:
-        logging.info(f"{user_id} -Blocked the bot.")
-        return False, "Blocked"
-    except PeerIdInvalid:
-        await db.delete_user(int(user_id))
-        logging.info(f"{user_id} - PeerIdInvalid")
-        return False, "Error"
-    except Exception as e:
-        return False, "Error"
-
-async def broadcast_messages_group(chat_id, message):
-    try:
-        kd = await message.copy(chat_id=chat_id)
-        try:
-            await kd.pin()
-        except:
-            pass
-        return True, "Success"
-    except FloodWait as e:
-        await asyncio.sleep(e.x)
-        return await broadcast_messages_group(chat_id, message)
-    except Exception as e:
-        return False, "Error"
-
-
-
-@app.on_message(filters.command("broadcast") & filters.user(Config.OWNER_ID) & filters.reply)
-async def verupikkals(bot, message):
-    users = await db.get_all_users()
-    b_msg = message.reply_to_message
-    sts = await message.reply_text(
-        text='Broadcasting your messages...'
-    )
-    start_time = time.time()
-    total_users = await db.total_users_count()
-    done = 0
-    blocked = 0
-    deleted = 0
-    failed =0
-    success = 0
-    async for user in users:
-        pti, sh = await broadcast_messages(int(user['id']), b_msg)
-        if pti:
-            success += 1
-        elif pti == False:
-            if sh == "Blocked":
-                blocked+=1
-            elif sh == "Deleted":
-                deleted += 1
-            elif sh == "Error":
-                failed += 1
-        done += 1
-        await asyncio.sleep(2)
-        if not done % 20:
-            await sts.edit(f"Broadcast in progress:\n\nTotal Users {total_users}\nCompleted: {done} / {total_users}\nSuccess: {success}\nBlocked: {blocked}\nDeleted: {deleted}")    
-    time_taken = datetime.timedelta(seconds=int(time.time()-start_time))
-    await sts.edit(f"Broadcast Completed:\nCompleted in {time_taken} seconds.\n\nTotal Users {total_users}\nCompleted: {done} / {total_users}\nSuccess: {success}\nBlocked: {blocked}\nDeleted: {deleted}")
 
 
 # Broadcast komutu
-@app.on_message(filters.command("bro") & filters.user(Config.OWNER_ID) & filters.reply)
+@app.on_message(filters.command("broadcast") & filters.user(Config.OWNER_ID) & filters.reply)
 async def broadcast_handler_open(_, m: Message):
     await main_broadcast_handler(m, db)
 
@@ -438,4 +379,66 @@ def humanbytes(size):
         raised_to_pow += 1
     return str(round(size, 2)) + " " + dict_power_n[raised_to_pow] + "B"
 
+
+
+########### ÇOKLU DİL ##############
+class LAN(object):
+
+    if LANGAUGE == "TR":
+
+        BILDIRIM = "```📣 Yeni Bildirim``` \n\n#YENI_KULLANICI **botu başlattı!** \n\n🏷 isim: `{}` \n📮 kullanıcı id: `{}` \n🧝🏻‍♂️ profil linki: [{}](tg://user?id={})"
+        GRUP_BILDIRIM = "```📣 Yeni Bildirim``` \n\n#YENI_GRUP **botu başlattı!** \n\n🏷 Gruba Alan İsim: `{}` \n📮 Gruba Alan kullanıcı id: `{}` \n🧝🏻‍♂️ profil linki: [{}](tg://user?id={})\n Grubun Adı: {}\n Grubun ID: {}\n Grubun Mesaj Linki( sadece açık gruplar): [Buraya Tıkla](https://t.me/c/{}/{})"
+        SAHIBIME = "sahibime"
+        PRIVATE_BAN = "Üzgünüm, yasaklandınız! Bunun bir hata olduğunu düşünyorsanız {} yazın."
+        GROUP_BAN = "Üzgünüm, grubunuz karalisteye alındı! Burada daha fazla kalamam. Bunun bir hata olduğunu düşünyorsanız {} yazın.'"
+        NOT_ONLINE = "aktif değil"
+        BOT_BLOCKED = "botu engellemiş"
+        USER_ID_FALSE = "kullanıcı kimliği yanlış"
+        BROADCAST_STARTED = "```📤 BroadCast başlatıldı! Bittiği zaman mesaj alacaksınız!"
+        BROADCAST_STOPPED = "✅ ```Broadcast başarıyla tamamlandı.``` \n\n**Şu Kadar Sürede Tamamlandı:** `{}` \n\n**Kayıtlı Toplam Kullanıcı:** `{}` \n\n**Toplam Gönderme Denemesi:** `{}` \n\n**Başarıyla Gönderilen:** `{}` \n\n**Toplam Hata:** `{}`"
+        STATS_STARTED = "{} **Lütfen bekleyiniz verileri getiriyorum!**"
+        STATS = """**@{} Verileri**\n\n**Kullanıcılar;**\n» **Toplam Sohbetler:** `{}`\n» **Toplam Gruplar: `{}`\n» **Toplam PM's: `{}`\n\n**Disk Kullanımı;**\n» **Disk Alanı:** `{}`\n» **Kullanılan:** `{}({}%)`\n» **Boşta:** `{}`\n\n**🎛 En Yüksek Kullanım Değerleri;**\n» **CPU:** `{}%`\n» **RAM:** `{}%`\n**Sürümler;**\n» **Pyrogram:** {}\n\n\n__• By @BasicBots__"""
+        BAN_REASON = "Bu sebep yasaklandığınız için @{} tarafından otomatik olarak oluşturulmuştur"
+        NEED_USER = "**Lütfen Kullanıcı kimliği verin.**"
+        BANNED_GROUP = "🚷 **Yasaklandı!\n\nTarafından:** {}\n**Grup ID:** `{}` \n**Süre:** `{}` \n**Sebep:** `{}`"
+        AFTER_BAN_GROUP = "**Üzgünüm grubunuz kara listeye alındı! \n\nSebep:** `{}`\n\n**Daha fazla burada kalamam. Bunun bir hata olduğunu düşünüyorsanız destek grubuna gelin.**"
+        GROUP_BILGILENDIRILDI = "\n\n✅ **Grubu bilgilendirdim ve gruptan ayrıldım.**"
+        GRUP_BILGILENDIRILEMEDI = "\n\n❌ **Grubu bilgilendirmeye çalışırken bir hata oluştu:** \n\n`{}`"
+        USER_BANNED = "🚷 **Yasaklandı! \n\nTarafından:** {}\n **Kullanıcı ID:** `{}` \n**Süre:** `{}` \n**Sebep:** `{}`"
+        AFTER_BAN_USER = "**Üzgünüm kara listeye alındınız! \n\nSebep:** `{}`\n\n**Bundan sonra size hizmet veremeyeceğim.**"
+        KULLANICI_BILGILENDIRME = "\n\n✅ Kişiyi bilgilendirdim."
+        KULLANICI_BILGILENDIRMEME = "\n\n❌ **Kişiyi bilgilendirmeye çalışırken bir hata oluştu:** \n\n`{}`"
+        UNBANNED_USER = "🆓 **Kullanıcının Yasağı Kaldırıldı !** \nTarafından: {} \n**Kullanıcı ID:**{}"
+        USER_UNBAN_NOTIFY = "🎊 Müjde! Yasağınız kaldırıldı!"
+        BLOCKS = "🆔 **Kullanıcı ID**: `{}`\n⏱ **Süre**: `{}`\n🗓 **Yasaklanan Tarih**: `{}`\n💬 **Sebep**: `{}`\n\n"
+        TOTAL_BLOCK = "🚷 **Toplam Yasaklanan:** `{}`\n\n{}"
+
+    elif LANGAUGE == "AZ":
+
+        BILDIRIM = "```📣 Yeni İsmarıc``` \n\n#YENI_ISTIFADƏÇİ **botu başlatdı!** \n\n🏷 isim: `{}` \n📮 istifadəçi id: `{}` \n🧝🏻‍♂️ profil linki: [{}](tg://user?id={})"
+        GRUP_BILDIRIM = "```📣 Yeni İsmarıc``` \n\n#YENI_QRUP **botu başlatdı!** \n\n🏷 Qrupa əlavə edən: `{}` \n📮 Qrupa əlavə edən istifadəçi id: `{}` \n🧝🏻‍♂️ profil linki: [{}](tg://user?id={})\n Qrupun adı: {}\n Qrupun ID: {}\n Qrupun mesaj kinki( sadəcə açıq qruplar): [Buraya Toxun](https://t.me/c/{}/{})"
+        SAHIBIME = "sahibimə"
+        PRIVATE_BAN = "Məyusam, əngəlləndiniz! Bunun bir xəta olduğunu düşünürsünüz isə {} yazın."
+        GROUP_BAN = "Məyusam, qrupunuz qara siyahıya əlavə olundu! Artıq burada qala bilmərəm! Bunun bir xəta olduğunu düşünürsünüz isə {} yazın.'"
+        NOT_ONLINE = "aktiv deyil"
+        BOT_BLOCKED = "botu əngəlləyib"
+        USER_ID_FALSE = "istifadəçi id'i yanlışdır."
+        BROADCAST_STARTED = "```📤 BroadCast başladıldı! Bitəndə mesaj alacaqsınız."
+        BROADCAST_STOPPED = "✅ ```Broadcast uğurla tamamlandı.``` \n\n**Bu qədər vaxtda tamamlandı** `{}` \n\n**Ümumi istifadəçilər:** `{}` \n\n**Ümumi göndərmə cəhdləri:** `{}` \n\n**Uğurla göndərilən:** `{}` \n\n**Ümumi xəta:** `{}`"
+        STATS_STARTED = "{} **Zəhmət olmasa gözləyin, bilgiləri gətirirəm!**"
+        STATS = """**@{} Məlumatları**\n\n**İstifadəçiləri;**\n» **Ümumi söhbətlər:** `{}`\n» **Ümumi qruplar: `{}`\n» **Ümumi PM's: `{}`\n\n**Disk İstifadəsi;**\n» **Disk'in Sahəsi:** `{}`\n» **İstifadə edilən:** `{}({}%)`\n» **Boş qalan:** `{}`\n\n**🎛 Ən yüksək istifadə dəyərləri;**\n» **CPU:** `{}%`\n» **RAM:** `{}%`\n**Versiyalar;**\n» **Pyrogram:** {}\n\n\n__• By @BasicBots__"""
+        BAN_REASON = "Bu sebep yasaklandığınız için @{} tarafından otomatik olarak oluşturulmuştur"
+        NEED_USER = "**Zəhmət olmasa istifadəçi id'si verin.**"
+        BANNED_GROUP = "🚷 **Qadağan olundu!\n\nQadağan edən:** {}\n**Qrup ID:** `{}` \n**Vaxt:** `{}` \n**Səbəb:** `{}`"
+        AFTER_BAN_GROUP = "**Məyusam, qrupunyz qara siyahıya əlavə edildi! \n\nSəbəb:** `{}`\n\n**Artıq burada qala bilmərəm. Bunun bir xəta olduğunu düşünürsünüzsə, dətək qrupuna gəlin.**"
+        GROUP_BILGILENDIRILDI = "\n\n✅ **Qrupu bilgiləndirdim və qrupdan çıxdım.**"
+        GRUP_BILGILENDIRILEMEDI = "\n\n❌ **Qrupu məlumatlandırarkən xəta yarandı:** \n\n`{}`"
+        USER_BANNED = "🚷 **Qadağan olundu! \n\nQadağan edən:** {}\n **İstifadəçi ID:** `{}` \n**Vaxt:** `{}` \n**Səbəb:** `{}`"
+        AFTER_BAN_USER = "**Məyusam, qara siyahıya əlavə edildiniz! \n\nSəbəb:** `{}`\n\n**Bundan sonra sizə xidmət etməyəcəyəm.**"
+        KULLANICI_BILGILENDIRME = "\n\n✅ İstifadəçini məlumatlandırdım."
+        KULLANICI_BILGILENDIRMEME = "\n\n❌ **İstifadəçini məlumatlandırarkən xəta yarandı:** \n\n`{}`"
+        UNBANNED_USER = "🆓 **İstifadəçinin qadağası qaldırıldı !** \nQadağanı qaldıran: {} \n**İstifadəçi ID:**{}"
+        USER_UNBAN_NOTIFY = "🎊 Sizə gözəl bir xəbərim var! Artıq əngəliniz qaldırıldı!"
+        BLOCKS = "🆔 **İstifadəçi ID**: `{}`\n⏱ **Vaxt**: `{}`\n🗓 **Qadağan edildiyi tarix**: `{}`\n💬 **Səbəb**: `{}`\n\n"
+        TOTAL_BLOCK = "🚷 **Ümumi əngəllənən:** `{}`\n\n{}"
 
