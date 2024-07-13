@@ -345,7 +345,7 @@ async def unban(c: Client, m: Message):
 
 # Yasaklı listesini görme komutu
 @app.on_message(filters.command("blocklist") & filters.user(Config.OWNER_ID))
-async def _banned_usrs(_, m: Message):
+async def _banned_usrs(client: Client, m: Message):
     all_banned_users = await db.get_all_banned_users()
     banned_usr_count = 0
     text = ""
@@ -360,10 +360,10 @@ async def _banned_usrs(_, m: Message):
     if len(reply_text) > 4096:
         with open("banned-user-list.txt", "w") as f:
             f.write(reply_text)
-        await m.reply_document("banned-user-list.txt", True)
+        await m.reply_document("banned-user-list.txt", quote=True)
         os.remove("banned-user-list.txt")
         return
-    await m.reply_text(reply_text, True)
+    await m.reply_text(reply_text, quote=True)
 
 
 
