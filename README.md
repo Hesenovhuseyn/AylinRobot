@@ -5,4 +5,4 @@ Deməli Belə Hamının O Satışa Çıxardığı Bot AylinRobot Bəziləri Hət
 
 İçəridəki Sahibin Kimə OldugunnDəyişmədən İşlədin
 
-# Reponu Ratışa Çıxardan Peysərdi
+# Reponu Satışa Çıxardan Peysərdi
