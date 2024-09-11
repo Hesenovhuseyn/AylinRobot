@@ -1,12 +1,6 @@
 
 from AylinRobot.config import Config
 from AylinRobot import AylinRobot as app
-
-
-
-
-
-
 from pyrogram.enums import *
 import datetime
 import motor.motor_asyncio
